@@ -4,7 +4,7 @@
  *           (C) 2001 Dirk Mueller (mueller@kde.org)
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Apple Inc. All rights reserved.
  * Copyright (C) 2008, 2009 Torch Mobile Inc. All rights reserved. (http://www.torchmobile.com/)
- * Copyright (C) 2012 The Linux Foundation All rights reserved.
+ * Copyright (C) 2012 Code Aurora Forum. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -244,7 +244,6 @@ public:
     
     // These low-level calls give the caller responsibility for maintaining the integrity of the tree.
     void setPreviousSibling(Node* previous) { m_previous = previous; }
-#ifdef __ARM_USE_PLD
     ALWAYS_INLINE void updatePrefetchTarget() {
         if (m_next) {
             int skew;
@@ -259,9 +258,6 @@ public:
     }
     void setPrefetchTarget(Node *prefetch) { m_prefetch = prefetch; }
     void setNextSibling(Node* next) { m_next = next; updatePrefetchTarget(); }
-#else
-    void setNextSibling(Node* next) { m_next = next; }
-#endif
     void updatePreviousNode() { m_previousNode = traversePreviousNode(); if (m_previousNode) m_previousNode->setNextNode(this); }
     void updateNextNode() { m_nextNode = traverseNextNode(); if (m_nextNode) m_nextNode->setPreviousNode(this); }
     void updatePrevNextNodesInSubtree();
@@ -425,12 +421,10 @@ public:
     Node* traverseNextNodeFastPath() const { prefetchTarget(); return m_nextNode; }
 
     ALWAYS_INLINE void prefetchTarget() const {
-#ifdef __ARM_USE_PLD
         if (m_prefetch) {
             __builtin_prefetch(((char *) m_prefetch));
             __builtin_prefetch(((char *) m_prefetch) + 64);
         }
-#endif
     }
 
     Node* lastDescendantNode(bool includeThis = false) const;
@@ -563,6 +557,7 @@ public:
     void removeCachedTagNodeList(TagNodeList*, const AtomicString&);
     void removeCachedTagNodeListNS(TagNodeListNS*, const QualifiedName&);
     void removeCachedLabelsNodeList(DynamicNodeList*);
+    void removeCachedChildNodeList(DynamicNodeList*);
 
     PassRefPtr<NodeList> getElementsByTagName(const AtomicString&);
     PassRefPtr<NodeList> getElementsByTagNameNS(const AtomicString& namespaceURI, const AtomicString& localName);
@@ -741,9 +736,7 @@ private:
     Document* m_document;
     Node* m_previous;
     Node* m_next;
-#ifdef __ARM_USE_PLD
     Node* m_prefetch;
-#endif
     RenderObject* m_renderer;
     mutable uint32_t m_nodeFlags;
     Node* m_previousNode;

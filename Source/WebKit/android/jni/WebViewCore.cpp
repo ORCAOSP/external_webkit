@@ -1,8 +1,6 @@
 /*
  * Copyright 2006, The Android Open Source Project
- * Copyright (C) 2012 Sony Ericsson Mobile Communications AB.
- * Copyright (C) 2012 Sony Mobile Communications AB
- * Copyright (c) 2011,2012 The Linux Foundation. All rights reserved.
+ * Copyright (C) 2011, 2012 Code Aurora Forum. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -2830,7 +2828,7 @@ bool WebViewCore::isVisible(Node* node)
     else
         element = node->parentElement();
     // check renderer
-    if (!element || !element->renderer()) {
+    if (!element->renderer()) {
         return false;
     }
     // check size
@@ -4862,15 +4860,6 @@ static void Pause(JNIEnv* env, jobject obj, jint nativeClass)
 
     WebViewCore* viewImpl = reinterpret_cast<WebViewCore*>(nativeClass);
     Frame* mainFrame = viewImpl->mainFrame();
-
-    for (Frame* frame = mainFrame; frame; frame = frame->tree()->traverseNext()) {
-#if ENABLE(WEBGL)
-        Document* document = frame->document();
-        if (document)
-            document->suspendDocument();
-#endif
-    }
-
     if (mainFrame)
         mainFrame->settings()->setMinDOMTimerInterval(BACKGROUND_TIMER_INTERVAL);
 
@@ -4887,15 +4876,6 @@ static void Resume(JNIEnv* env, jobject obj, jint nativeClass)
 {
     WebViewCore* viewImpl = reinterpret_cast<WebViewCore*>(nativeClass);
     Frame* mainFrame = viewImpl->mainFrame();
-
-    for (Frame* frame = mainFrame; frame; frame = frame->tree()->traverseNext()) {
-#if ENABLE(WEBGL)
-        Document* document = frame->document();
-        if (document)
-            document->resumeDocument();
-#endif
-    }
-
     if (mainFrame)
         mainFrame->settings()->setMinDOMTimerInterval(FOREGROUND_TIMER_INTERVAL);
 

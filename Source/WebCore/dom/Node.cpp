@@ -5,7 +5,7 @@
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Apple Inc. All rights reserved.
  * Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
  * Copyright (C) 2009 Torch Mobile Inc. All rights reserved. (http://www.torchmobile.com/)
- * Copyright (C) 2012 The Linux Foundation All rights reserved.
+ * Copyright (C) 2012 Code Aurora Forum. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -628,8 +628,12 @@ void Node::setNodeValue(const String& /*nodeValue*/, ExceptionCode& ec)
 PassRefPtr<NodeList> Node::childNodes()
 {
     NodeListsNodeData* data = ensureRareData()->ensureNodeLists(this);
+    if (data->m_childNodeListCache)
+        return PassRefPtr<ChildNodeList>(data->m_childNodeListCache);
 
-    return ChildNodeList::create(this, data->m_childNodeListCaches.get());
+    RefPtr<ChildNodeList> childNodeList = ChildNodeList::create(this);
+    data->m_childNodeListCache = childNodeList.get();
+    return childNodeList.release();
 }
 
 Node *Node::lastDescendant() const
@@ -1143,6 +1147,16 @@ void Node::removeCachedLabelsNodeList(DynamicNodeList* list)
     
     NodeListsNodeData* data = rareData()->nodeLists();
     data->m_labelsNodeListCache = 0;
+}
+
+void Node::removeCachedChildNodeList(DynamicNodeList* list)
+{
+    ASSERT(rareData());
+    ASSERT(rareData()->nodeLists());
+    ASSERT_UNUSED(list, list->hasOwnCaches());
+
+    NodeListsNodeData* data = rareData()->nodeLists();
+    data->m_childNodeListCache = 0;
 }
 
 Node* Node::traverseNextNode(const Node* stayWithin) const
@@ -2490,7 +2504,8 @@ void Node::formatForDebugger(char* buffer, unsigned length) const
 
 void NodeListsNodeData::invalidateCaches()
 {
-    m_childNodeListCaches->reset();
+    if (m_childNodeListCache)
+        m_childNodeListCache->invalidateCache();
 
     if (m_labelsNodeListCache)
         m_labelsNodeListCache->invalidateCache();
@@ -2521,7 +2536,7 @@ bool NodeListsNodeData::isEmpty() const
     if (!m_listsWithCaches.isEmpty())
         return false;
 
-    if (m_childNodeListCaches->refCount())
+    if (m_childNodeListCache)
         return false;
     
     TagNodeListCacheNS::const_iterator tagCacheEndNS = m_tagNodeListCacheNS.end();

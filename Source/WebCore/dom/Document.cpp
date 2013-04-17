@@ -7,9 +7,6 @@
  * Copyright (C) 2008, 2009 Torch Mobile Inc. All rights reserved. (http://www.torchmobile.com/)
  * Copyright (C) 2008, 2009 Google Inc. All rights reserved.
  * Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies)
- * Copyright (c) 2011, 2012 The Linux Foundation All rights reserved
- * Copyright (C) 2011, 2012 Sony Ericsson Mobile Communications AB
- * Copyright (C) 2012 Sony Mobile Communcations AB
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -428,9 +425,6 @@ Document::Document(Frame* frame, const KURL& url, bool isXHTML, bool isHTML)
     , m_documentRareData(0)
 #if ENABLE(WML)
     , m_containsWMLContent(false)
-#endif
-#if ENABLE(WEBGL) && PLATFORM(ANDROID)
-    , m_containsWebGLContent(false)
 #endif
     , m_weakReference(DocumentWeakReference::create(this))
     , m_idAttributeName(idAttr)
@@ -5042,15 +5036,15 @@ void Document::loadEventDelayTimerFired(Timer<Document>*)
 }
 
 #if ENABLE(REQUEST_ANIMATION_FRAME)
-int Document::webkitRequestAnimationFrame(PassRefPtr<RequestAnimationFrameCallback> callback)
+int Document::webkitRequestAnimationFrame(PassRefPtr<RequestAnimationFrameCallback> callback, Element* animationElement)
 {
     if (!m_scriptedAnimationController)
         m_scriptedAnimationController = ScriptedAnimationController::create(this);
 
-    return m_scriptedAnimationController->registerCallback(callback);
+    return m_scriptedAnimationController->registerCallback(callback, animationElement);
 }
 
-void Document::webkitCancelAnimationFrame(int id)
+void Document::webkitCancelRequestAnimationFrame(int id)
 {
     if (!m_scriptedAnimationController)
         return;
@@ -5098,29 +5092,4 @@ DocumentLoader* Document::loader() const
     return loader;
 }
 
-#if ENABLE(WEBGL) && PLATFORM(ANDROID)
-void Document::suspendDocument()
-{
-    HashSet<Element*>::iterator end = m_documentSuspendCallbackElements.end();
-    for (HashSet<Element*>::iterator i = m_documentSuspendCallbackElements.begin(); i != end; ++i)
-        (*i)->documentWasSuspended();
-}
-
-void Document::resumeDocument()
-{
-    HashSet<Element*>::iterator end = m_documentSuspendCallbackElements.end();
-    for (HashSet<Element*>::iterator i = m_documentSuspendCallbackElements.begin(); i != end; ++i)
-        (*i)->documentWillResume();
-}
-
-void Document::registerForDocumentSuspendCallbacks(Element* e)
-{
-    m_documentSuspendCallbackElements.add(e);
-}
-
-void Document::unregisterForDocumentSuspendCallbacks(Element* e)
-{
-    m_documentSuspendCallbackElements.remove(e);
-}
-#endif
 } // namespace WebCore

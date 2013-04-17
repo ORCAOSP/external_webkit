@@ -4049,9 +4049,6 @@ bool RenderLayer::shouldBeNormalFlowOnly() const
                 || renderer()->hasReflection()
                 || renderer()->hasMask()
                 || renderer()->isVideo()
-#if PLATFORM(ANDROID)
-                || renderer()->isCanvas()
-#endif
                 || renderer()->isEmbeddedObject()
                 || renderer()->isApplet()
                 || renderer()->isRenderIFrame()
@@ -4073,9 +4070,6 @@ bool RenderLayer::isSelfPaintingLayer() const
         || renderer()->hasMask()
         || renderer()->isTableRow()
         || renderer()->isVideo()
-#if PLATFORM(ANDROID)
-        || renderer()->isCanvas()
-#endif
         || renderer()->isEmbeddedObject()
         || renderer()->isApplet()
         || renderer()->isRenderIFrame();
